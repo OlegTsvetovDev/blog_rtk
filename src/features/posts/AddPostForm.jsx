@@ -1,49 +1,42 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+
+import { useAddNewPostMutation } from "./postsSlice";
+import { selectAllUsers } from "../users/usersSlice";
 import { useNavigate } from "react-router-dom";
 
-import { addNewPost } from "./postsSlice";
-import { selectAllUsers } from "../users/usersSlice";
+const AddPostForm = () => {
+  const navigate = useNavigate();
+  const [addNewPost, { isLoading }] = useAddNewPostMutation();
 
-function AddPostForm() {
-  const dispatch = useDispatch();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState("");
+
   const users = useSelector(selectAllUsers);
-  const [addRequestStatus, setAddRequestStatus] = useState("idle");
-  const navigate = useNavigate();
 
-  const canSave =
-    Boolean(title) &&
-    Boolean(content) &&
-    Boolean(userId) &&
-    addRequestStatus === "idle";
+  const onTitleChanged = (e) => setTitle(e.target.value);
+  const onContentChanged = (e) => setContent(e.target.value);
+  const onAuthorChanged = (e) => setUserId(e.target.value);
 
-  const handleSavePost = (e) => {
-    if (!canSave) return;
+  const canSave = [title, content, userId].every(Boolean) && !isLoading;
 
-    try {
-      setAddRequestStatus("pending");
-      dispatch(
-        addNewPost({
-          title,
-          body: content,
-          userId,
-        })
-      ).unwrap();
-      setTitle("");
-      setContent("");
-      setUserId("");
-      navigate("/");
-    } catch (err) {
-      console.log("Failed to save the post: ", err);
-    } finally {
-      setAddRequestStatus("idle");
+  const onSavePostClicked = async () => {
+    if (canSave) {
+      try {
+        await addNewPost({ title, body: content, userId }).unwrap();
+
+        setTitle("");
+        setContent("");
+        setUserId("");
+        navigate("/");
+      } catch (err) {
+        console.error("Failed to save the post", err);
+      }
     }
   };
 
-  const userOptions = users.map((user) => (
+  const usersOptions = users.map((user) => (
     <option key={user.id} value={user.id}>
       {user.name}
     </option>
@@ -51,40 +44,33 @@ function AddPostForm() {
 
   return (
     <section>
-      <h3>Create a new post</h3>
+      <h2>Add a New Post</h2>
       <form>
-        <label htmlFor="postUser"></label>
         <label htmlFor="postTitle">Post Title:</label>
         <input
           type="text"
           id="postTitle"
           name="postTitle"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={onTitleChanged}
         />
-        <select
-          name="postAuthor"
-          id="postAuthor"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-        >
-          <option value="0">Select Author</option>
-          {userOptions}
+        <label htmlFor="postAuthor">Author:</label>
+        <select id="postAuthor" value={userId} onChange={onAuthorChanged}>
+          <option value=""></option>
+          {usersOptions}
         </select>
-        <label htmlFor="postConte">Post Content:</label>
+        <label htmlFor="postContent">Content:</label>
         <textarea
-          type="text"
           id="postContent"
           name="postContent"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={onContentChanged}
         />
-        <button onClick={handleSavePost} disabled={!canSave}>
-          Add Post
+        <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
+          Save Post
         </button>
       </form>
     </section>
   );
-}
-
+};
 export default AddPostForm;

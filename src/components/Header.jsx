@@ -1,6 +1,4 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import Counter from "./Counter";
 
 const Header = () => {
   return (
@@ -12,12 +10,11 @@ const Header = () => {
             <Link to="/">Home</Link>
           </li>
           <li>
-            <Link to="/posts">New post</Link>
+            <Link to="post">Post</Link>
           </li>
           <li>
-            <Link to="/users">Users</Link>
+            <Link to="user">Users</Link>
           </li>
-          {/* <Counter /> */}
         </ul>
       </nav>
     </header>
